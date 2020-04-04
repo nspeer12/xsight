@@ -19,7 +19,7 @@ classNames = {0: 'background',
                     86: 'vase', 87: 'scissors', 88: 'teddy bear', 89: 'hair drier', 90: 'toothbrush'}
 
 
-class CVTFObjectDetection():
+class CVObjectDetection():
     def __init__(self, num_workers=8):
         cv2.setNumThreads(num_workers)
         self.confidence = 0.8
@@ -34,15 +34,18 @@ class CVTFObjectDetection():
             if class_id == key:
                 return value
 
-
-    def detect(self, image):
+    def detect(self, img):
         # Loading model
     
-        image_height, image_width, _ = image.shape
-
-        self.model.setInput(cv2.dnn.blobFromImage(image, size=(300, 300), swapRB=True))
+        img_height, img_width, _ = img.shape
+        self.model.setInput(cv2.dnn.blobFromImage(img, size=(300, 300), swapRB=True))
         output = self.model.forward()
-        # print(output[0,0,:,:].shape)
+        
+        # keeps track of if there is a person or not
+        status = False
+        # the box around the target
+        # initially -1
+        objectRegion = [-1, -1, -1, -1]
 
         for detection in output[0, 0, :, :]:
             class_id = detection[1]
@@ -50,12 +53,14 @@ class CVTFObjectDetection():
             if class_id == 1 and detection[2] > self.confidence:
                 class_name=self.id_class_name(class_id,classNames)
                 print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
-                box_x = detection[3] * image_width
-                box_y = detection[4] * image_height
-                box_width = detection[5] * image_width
-                box_height = detection[6] * image_height
-                cv2.rectangle(image, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
-                cv2.putText(image,class_name ,(int(box_x), int(box_y+.05*image_height)),cv2.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
-                return image, True
+                box_x = detection[3] * img_width
+                box_y = detection[4] * img_height
+                box_width = detection[5] * img_width
+                box_height = detection[6] * img_height
+                cv2.rectangle(img, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
+                cv2.putText(img,class_name ,(int(box_x), int(box_y+.05*img_height)),cv2.FONT_HERSHEY_SIMPLEX,(.005*img_width),(0, 0, 255))
+                objectRegion = [int(box_x), int(box_y), int(box_x + box_width), int(box_y + box_height)]
+                status = True
+                return img, status, objectRegion
 
-        return image, False
+        return img, status, objectRegion
