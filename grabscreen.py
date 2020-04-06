@@ -3,19 +3,25 @@ import numpy as np
 import win32gui, win32ui, win32con, win32api
 
 
-def roi(x1,y1,x2,y2, n=150):
-    # returns n*2 by n*2 region of interest in the center of the screen
-    xdiff = x2 - x1
-    ydiff = y2 - y1
+def get_roi(window, n):
+    n = n/2
+    # returns n by n region of interest in the center of the screen
+    xdiff = window[2] - window[0]
+    ydiff = window[3] - window[1]
     xcenter = xdiff / 2
     ycenter = ydiff / 2
-    region =  [int(xcenter - n), int(ycenter - n), int(xcenter + n), int(ycenter + n)]
-    img = grab_screen(region=region)
-    return img
+    roi =  [int(xcenter - n), int(ycenter - n), int(xcenter + n), int(ycenter + n)]
+    return roi
 
 
-def get_coords(x1, y1, x2, y2, objectRegion, n=150):
+def get_coords(window, objectRegion, n):
+    n = n/2
     # returns the real location of the boxes relative to the gameplay screen
+    x1 = window[0]
+    y1 = window[1]
+    x2 = window[2]
+    y2 = window[3]
+
     roixorgin = int(((x2 - x1) / 2) - n)
     roiyorgin = int(((y2 - y1) / 2) - n)
 

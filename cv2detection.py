@@ -1,4 +1,6 @@
 import cv2
+import sys
+from grabscreen import *
 
 classNames = {0: 'background',
                     1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle', 5: 'airplane', 6: 'bus',
@@ -18,8 +20,50 @@ classNames = {0: 'background',
                     80: 'toaster', 81: 'sink', 82: 'refrigerator', 84: 'book', 85: 'clock',
                     86: 'vase', 87: 'scissors', 88: 'teddy bear', 89: 'hair drier', 90: 'toothbrush'}
 
+class Tracker():
+    def __init__(self, window, roi, box, img, n):
+        self.window = window
+        self.box = box
+        self.roi = roi
+        self.n = n
+        self.x1 = roi[0]
+        self.y1 = roi[1]
+        self.x2 = roi[2]
+        self.y2 = roi[3]
+        self.box = tuple(box)
+        self.tracker = cv2.TrackerKCF_create()
+        self.tracker.init(img, self.box)
+        print('Tracker initialized')
 
-class CVObjectDetection():
+    def lock_on(self):
+        lockedOn = True
+        i = 0
+        # basically an enhanced detection period
+        while lockedOn == True:
+            img = grab_screen(region=self.roi)
+            # Update tracker
+            lockedOn, box = self.tracker.update(img)
+            i+=1
+            print(i)
+            # Draw bounding box
+            p1 = (int(self.box[0]), int(self.box[1]))
+            p2 = (int(self.box[0] + self.box[2]), int(self.box[1] + self.box[3]))
+
+            # get coordinates relative to game not roi
+            targetBox = get_coords(self.roi, box, self.n)
+            xcenter = ((targetBox[2] - targetBox[0]) / 2) + targetBox[0]
+            ycenter = ((targetBox[3] - targetBox[1]) / 2) + targetBox[1]
+                
+            # fire on target
+
+            cv2.rectangle(img, p1, p2, (255,0,0), 2, 1)
+            cv2.imshow('target', img)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                cv2.destroyAllWindows()
+                break
+
+
+class ObjectDetection():
     def __init__(self, num_workers=8):
         cv2.setNumThreads(num_workers)
         self.confidence = 0.8
@@ -27,8 +71,6 @@ class CVObjectDetection():
         self.model = model = cv2.dnn.readNetFromTensorflow('models/ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb',
                                                           'models/ssd_mobilenet_v2_coco_2018_03_29/config.pbtxt')
         
-
-
     def id_class_name(self, class_id, classes):
         for key, value in classes.items():
             if class_id == key:
@@ -52,7 +94,6 @@ class CVObjectDetection():
             confidence = detection[2]
             if class_id == 1 and detection[2] > self.confidence:
                 class_name=self.id_class_name(class_id,classNames)
-                print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
                 box_x = detection[3] * img_width
                 box_y = detection[4] * img_height
                 box_width = detection[5] * img_width
@@ -64,3 +105,5 @@ class CVObjectDetection():
                 return img, status, objectRegion
 
         return img, status, objectRegion
+    
+
