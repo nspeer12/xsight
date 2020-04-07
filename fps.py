@@ -10,7 +10,7 @@ def main():
     # x1, y1, x2, y2
     window = [0, 0, 1920, 1080]
     # n defines the height and width of our square viewing region
-    n = 450
+    n = 300
     roi = get_roi(window, n)
 
     printFps = True
@@ -22,6 +22,8 @@ def main():
         img =  vision.update_frame()
         vision.single_detection()
         cv2.imshow('detection', img)
+        if vision.shoot_status() == True:
+            quickscope(None, None)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break

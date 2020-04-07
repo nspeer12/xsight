@@ -31,20 +31,21 @@ class Vision():
         self.y1 = roi[1]
         self.x2 = roi[2]
         self.y2 = roi[3]
-        print(self.roi)
         self.img = None
         self.t = time.time()
         self.status = "Initialized"
         self.screen = d3dshot.create()
+        self.shoot = False
 
         #self.tracker = cv2.TrackerKCF_create()
         #self.tracker.init(img, self.box)
         self.confidence = 0.8
         # Pretrained classes in the model
-        self.model = model = cv2.dnn.readNetFromTensorflow('models/ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb',
-                                                          'models/ssd_mobilenet_v2_coco_2018_03_29/config.pbtxt')
-        
-        cv2.setNumThreads(4)
+        self.model = cv2.dnn.readNetFromTensorflow('models/ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb',
+                                                    'models/ssd_mobilenet_v2_coco_2018_03_29/config.pbtxt')
+        self.model.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+        self.model.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+        #cv2.setNumThreads(4)
 
     def lock_on(self):
         lockedOn = True
@@ -102,9 +103,11 @@ class Vision():
                 objectRegion = [int(box_x), int(box_y), int(box_x + box_width), int(box_y + box_height)]
                 
                 self.update_status("Target Identified")
+                self.shoot = True
                 return objectRegion
 
         # person not found
+        self.shoot = False
         self.update_status("No Targets Identified")
         return objectRegion
 
@@ -135,7 +138,7 @@ class Vision():
         self.update_status(str(targetNum) + " Targets Identified")
         return
 
-    def everthing_detection(self):
+    def everything_detection(self):
         self.model.setInput(cv2.dnn.blobFromImage(self.img, size=(300, 300), swapRB=True))
         output = self.model.forward()
             
@@ -148,7 +151,7 @@ class Vision():
         for detection in output[0, 0, :, :]:
             class_id = detection[1]
             confidence = detection[2]
-            if cdetection[2] > self.confidence:
+            if detection[2] > self.confidence:
                 class_name=self.id_class_name(class_id,classNames)
                 box_x = detection[3] * self.n
                 box_y = detection[4] * self.n
@@ -178,6 +181,9 @@ class Vision():
 
     def get_status(self):
         return self.status
+    
+    def shoot_status(self):
+        return self.shoot
 
     def print_info(self):
         sys.stdout.write("FPS  %.2f \tStatus: %-20s \r" % (self.fps(), self.get_status()))

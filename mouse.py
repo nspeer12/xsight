@@ -6,24 +6,30 @@ def click(x, y):
 def get_position():
     return pyautogui.position()
 
-def quickscope():
+
+def quickscope(x, y):
     # hold right for 1 second
-    aim(.5)
+    aim(.5, x, y)
     pyautogui.click(button='left')
-    time.sleep(1)
+    #pyautogui.mouseUp()
+
 
 def gratata(n):
     pyautogui.click(button='left', clicks=n, interval=0.1)
 
 
-def full_auto(n):
-    # aim for n seconds
-    pyautogui.dragTo(1, 1, n, button='left')
+def full_auto(n, x, y):
+    pyautogui.dragTo(x, y, n, button='left')
 
 
-def aim(n):
-    # aim for n seconds
-    pyautogui.dragTo(1, 1, n, button='right')
+def aim(n, x, y):
+    pyautogui.mouseDown(button='right',x=x, y=y, duration=n)
+
+
+def drag_scope(n, x, y):
+    aim(n,x,y)
+    pyautogui.click()
+
 
 def lock_on_target(objectRegion):
     xcenter = int((objectRegion[2] - objectRegion[0]) / 2) + objectRegion[0]
