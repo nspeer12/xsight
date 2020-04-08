@@ -9,7 +9,7 @@ def get_position():
 
 def quickscope(x, y):
     # hold right for 1 second
-    aim(.5, x, y)
+    aim(1, x, y)
     pyautogui.click(button='left')
     #pyautogui.mouseUp()
 

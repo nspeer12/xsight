@@ -3,6 +3,7 @@ import sys
 import time
 import numpy as np
 import d3dshot
+import asyncio
 
 classNames = {0: 'background',
                     1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle', 5: 'airplane', 6: 'bus',
@@ -36,16 +37,11 @@ class Vision():
         self.status = "Initialized"
         self.screen = d3dshot.create()
         self.shoot = False
-
-        #self.tracker = cv2.TrackerKCF_create()
-        #self.tracker.init(img, self.box)
-        self.confidence = 0.8
+        self.confidence = 0.7
         # Pretrained classes in the model
         self.model = cv2.dnn.readNetFromTensorflow('models/ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb',
                                                     'models/ssd_mobilenet_v2_coco_2018_03_29/config.pbtxt')
-        self.model.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-        self.model.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-        #cv2.setNumThreads(4)
+
 
     def lock_on(self):
         lockedOn = True
@@ -79,8 +75,9 @@ class Vision():
             if class_id == key:
                 return value
 
-    def single_detection(self):
-        self.model.setInput(cv2.dnn.blobFromImage(self.img, size=(300, 300), swapRB=True))
+    def detection(self):
+        img = self.update_frame()
+        self.model.setInput(cv2.dnn.blobFromImage(img, size=(300, 300), swapRB=True))
         output = self.model.forward()
         
         # keeps track of if there is a person or not
@@ -93,23 +90,23 @@ class Vision():
             class_id = detection[1]
             confidence = detection[2]
             if class_id == 1 and detection[2] > self.confidence:
-                class_name=self.id_class_name(class_id,classNames)
-                box_x = detection[3] * self.n
-                box_y = detection[4] * self.n
-                box_width = detection[5] * self.n
-                box_height = detection[6] * self.n
-                cv2.rectangle(self.img, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
-                cv2.putText(self.img,class_name ,(int(box_x), int(box_y+.05*self.n)),cv2.FONT_HERSHEY_SIMPLEX,(.005*self.n),(0, 0, 255))
-                objectRegion = [int(box_x), int(box_y), int(box_x + box_width), int(box_y + box_height)]
+                #class_name=self.id_class_name(class_id,classNames)
+                #box_x = detection[3] * self.n
+                #box_y = detection[4] * self.n
+                #box_width = detection[5] * self.n
+                #box_height = detection[6] * self.n
+                #cv2.rectangle(img, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
+                #cv2.putText(img,class_name ,(int(box_x), int(box_y+.05*self.n)),cv2.FONT_HERSHEY_SIMPLEX,(.005*self.n),(0, 0, 255))
+                #objectRegion = [int(box_x), int(box_y), int(box_x + box_width), int(box_y + box_height)]
                 
                 self.update_status("Target Identified")
                 self.shoot = True
-                return objectRegion
+                return img, objectRegion
 
         # person not found
         self.shoot = False
         self.update_status("No Targets Identified")
-        return objectRegion
+        return img, objectRegion
 
     def multi_person_detection(self):
         self.model.setInput(cv2.dnn.blobFromImage(self.img, size=(300, 300), swapRB=True))
@@ -189,5 +186,5 @@ class Vision():
         sys.stdout.write("FPS  %.2f \tStatus: %-20s \r" % (self.fps(), self.get_status()))
 
     def update_frame(self):
-        self.img = np.array(self.screen.screenshot(tuple(self.roi)))
-        return self.img
+        img = np.array(self.screen.screenshot(tuple(self.roi)))
+        return img
