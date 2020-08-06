@@ -4,6 +4,7 @@ from video import *
 import cv2
 
 def main():
-	detect_and_write('test.jpg')
+	record_video('test.mp4')
+
 if __name__ == '__main__':
 	main()

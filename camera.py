@@ -4,7 +4,12 @@ import numpy as np
 import os
 
 # Specify device
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
+
+def take_photo(filename)
+	ret, frame = cap.read()
+	cv2.imwrite(filename, frame)
+
 
 def record_video(filename, mode = 'r'):
 	i = 0
