@@ -1,8 +1,10 @@
 import cv2, math, time
 import numpy as np
 import sys
-from voice import speak
 import time
+import torchvision
+from detection import get_prediction
+
 
 # Pretrained classes in the model
 classNames = {0: 'background',
@@ -41,18 +43,15 @@ while True:
 	
 	model.setInput(cv2.dnn.blobFromImage(image, size=(300, 300), swapRB=True))
 	output = model.forward()
-	max, max_class = -1, None
-	for detection in output[0, 0, :, :]:
+	
+   	for detection in output[0, 0, :, :]:
 		confidence = detection[2]
 		
 		if confidence > .7:
 			class_id = detection[1]
 			class_name=id_class_name(class_id,classNames)
 			print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
-			
-			if class_name == 'cat':
-				speak('herro kit cat')
-
+				
 			box_x = detection[3] * image_width
 			box_y = detection[4] * image_height
 			box_width = detection[5] * image_width

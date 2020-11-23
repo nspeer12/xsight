@@ -6,7 +6,7 @@ import os
 # Specify device
 cap = cv2.VideoCapture(0)
 
-def take_photo(filename)
+def take_photo(filename):
 	ret, frame = cap.read()
 	cv2.imwrite(filename, frame)
 

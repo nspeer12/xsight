@@ -1,5 +1,3 @@
-# source https://www.learnopencv.com/faster-r-cnn-object-detection-with-pytorch/
-
 import torchvision
 import torchvision.transforms as T
 import torch
@@ -54,19 +52,20 @@ def get_prediction(frame, threshold):
 
 
 
-def object_detection_api(frame, filename, threshold=0.5, rect_th=1, text_size=1, text_th=1):
-	boxes, pred_cls = get_prediction(frame, threshold) # Get predictions
-	img = frame # Read image with cv2
+def object_detection(input_file, output_file, threshold=0.5, rect_th=1, text_size=1, text_th=1):
+	boxes, pred_cls = get_prediction(input_file, threshold) # Get predictions
+	img = input_file # Read image with cv2
 	#img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB
-	for i in range(len(boxes)):
-		cv2.rectangle(img, boxes[i][0], boxes[i][1],color=(0, 255, 0), thickness=rect_th) # Draw Rectangle with the coordinates
-		cv2.putText(img,pred_cls[i], boxes[i][0],  cv2.FONT_HERSHEY_SIMPLEX, text_size, (0,255,0),thickness=text_th) # Write the prediction class
+	if boxes != None:
+            for i in range(len(boxes)):
+                cv2.rectangle(img, boxes[i][0], boxes[i][1],color=(0, 255, 0), thickness=rect_th) # Draw Rectangle with the coordinates
+                cv2.putText(img,pred_cls[i], boxes[i][0],  cv2.FONT_HERSHEY_SIMPLEX, text_size, (0,255,0),thickness=text_th) # Write the prediction class
 	plt.figure(figsize=(20,30)) # display the output image
 	plt.imshow(img)
 	plt.xticks([])
 	plt.yticks([])
 	plt.show()
-	write_detection(plt, filename)
+	write_detection(plt, output_file)
 
 def write_detection(plt, filename):
 	plt.savefig(filename)
